@@ -1,0 +1,39 @@
+{
+  "name": "terminal-llm-router",
+  "version": "0.3.0",
+  "description": "A local terminal router for Claude Code, Codex, Gemini and other LLM CLIs without API keys.",
+  "type": "module",
+  "bin": {
+    "llm-router": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js",
+    "lint": "echo 'Add your preferred linter here'",
+    "doctor": "tsx src/cli.ts doctor"
+  },
+  "keywords": [
+    "cli",
+    "llm",
+    "claude",
+    "codex",
+    "gemini",
+    "router",
+    "terminal",
+    "tui",
+    "orchestrator"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
