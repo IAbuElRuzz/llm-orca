@@ -2,7 +2,7 @@ import chalk from "chalk";
 import path from "node:path";
 import { appendHistory, previewText, writeTranscript } from "../core/history.js";
 import { enforceApprovalPolicy } from "../core/prompts.js";
-import { getConfig } from "../core/config.js";
+import { getActiveModel, getConfig } from "../core/config.js";
 import { collectContextFiles, packContext, attachPackedContext } from "../core/context.js";
 import { getProvider, isProviderName } from "../providers/index.js";
 import type { ApprovalPolicy, ProviderName, SandboxMode } from "../types/provider.js";
@@ -23,6 +23,7 @@ interface ProviderRunSummary {
   stdout: string;
   stderr: string;
   score: number;
+  model?: string;
   transcriptPath?: string;
 }
 
@@ -78,6 +79,7 @@ export async function compareProviders(input: CompareInput): Promise<void> {
   const tasks = names.map(async (name) => {
     const provider = getProvider(name);
     const status = provider.getStatus();
+    const model = await getActiveModel(name);
 
     if (!status.installed) {
       return {
@@ -86,14 +88,19 @@ export async function compareProviders(input: CompareInput): Promise<void> {
         stdout: "",
         stderr: `Binary '${status.binary}' not found.`,
         score: -100,
+        model,
       } satisfies ProviderRunSummary;
     }
 
     console.log(chalk.bold(`\n===== ${name.toUpperCase()} =====`));
+    if (model) {
+      console.log(chalk.gray(`Model: ${model}`));
+    }
     const result = await provider.runOnce({
       prompt: finalPrompt,
       cwd: input.cwd,
       json: input.json,
+      model,
       approvalPolicy,
       sandboxMode,
     });
@@ -104,6 +111,7 @@ export async function compareProviders(input: CompareInput): Promise<void> {
       stdout: result.stdout,
       stderr: result.stderr,
       score: scoreResult(result.stdout, result.stderr, result.exitCode),
+      model,
     } satisfies ProviderRunSummary;
   });
 
@@ -130,6 +138,7 @@ export async function compareProviders(input: CompareInput): Promise<void> {
         prompt: input.prompt,
         finalPrompt,
         contextFiles: files.map((file) => path.relative(input.cwd, file)),
+        model: item.model,
         stdout: item.stdout,
         stderr: item.stderr,
         exitCode: item.exitCode,
@@ -150,6 +159,7 @@ export async function compareProviders(input: CompareInput): Promise<void> {
       results: resultsWithTranscripts.map((item) => ({
         provider: item.provider,
         exitCode: item.exitCode,
+        model: item.model,
         stdoutPreview: previewText(item.stdout) ?? "",
         stderrPreview: previewText(item.stderr) ?? "",
         score: item.score,

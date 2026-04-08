@@ -8,6 +8,7 @@ export async function runDoctor(cwd = process.cwd()): Promise<void> {
 
   console.log(chalk.bold("LLM Router Doctor"));
   console.log(`Active provider: ${config.activeProvider}`);
+  console.log(`Active model override: ${config.activeModels?.[config.activeProvider] ?? "none"}`);
   console.log(`Default approval policy: ${config.defaultApprovalPolicy}`);
   console.log(`Default sandbox mode: ${config.defaultSandboxMode}`);
   console.log(`History enabled: ${config.historyEnabled ? "yes" : "no"}`);

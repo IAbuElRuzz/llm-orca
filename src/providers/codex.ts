@@ -35,7 +35,15 @@ export class CodexProvider extends BaseProvider {
       args.push("--model", options.model);
     }
 
-    if (options.approvalPolicy === "auto" || options.sandboxMode === "full") {
+    if (options.sandboxMode === "workspace") {
+      args.push("--sandbox", "workspace-write");
+    } else if (options.sandboxMode === "read-only") {
+      args.push("--sandbox", "read-only");
+    } else if (options.sandboxMode === "full") {
+      args.push("--sandbox", "danger-full-access");
+    }
+
+    if (options.approvalPolicy === "auto") {
       args.push("--full-auto");
     }
 

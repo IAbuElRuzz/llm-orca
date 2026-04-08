@@ -6,7 +6,7 @@ export interface HistoryEntry {
   id: string;
   timestamp: string;
   provider: string;
-  mode: "open" | "run" | "compare";
+  mode: "open" | "run" | "compare" | "chat";
   cwd: string;
   prompt?: string;
   promptPreview?: string;
@@ -20,6 +20,7 @@ export interface HistoryEntry {
   results?: Array<{
     provider: string;
     exitCode: number;
+    model?: string;
     stdoutPreview?: string;
     stderrPreview?: string;
     score?: number;

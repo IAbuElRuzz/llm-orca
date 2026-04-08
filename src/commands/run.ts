@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import path from "node:path";
-import { getConfig } from "../core/config.js";
+import { getActiveModel, getConfig } from "../core/config.js";
 import { appendHistory, previewText, writeTranscript } from "../core/history.js";
 import { enforceApprovalPolicy } from "../core/prompts.js";
 import { resolveProfile } from "../core/profile-resolution.js";
@@ -37,7 +37,7 @@ export async function runPrompt(input: RunCommandInput): Promise<void> {
 
   const approvalPolicy = input.approvalPolicy ?? profile.approvalPolicy ?? config.defaultApprovalPolicy;
   const sandboxMode = input.sandboxMode ?? profile.sandboxMode ?? config.defaultSandboxMode;
-  const model = input.model ?? profile.model;
+  const model = input.model ?? profile.model ?? await getActiveModel(provider.name);
   const json = input.json ?? profile.json;
   const extraArgs = [...(profile.extraArgs ?? []), ...(input.extraArgs ?? [])];
 

@@ -12,6 +12,7 @@ import type { ApprovalPolicy, ProviderName, SandboxMode } from "../types/provide
 
 export interface AppConfig {
   activeProvider: ProviderName;
+  activeModels?: Partial<Record<ProviderName, string>>;
   defaultApprovalPolicy: ApprovalPolicy;
   defaultSandboxMode: SandboxMode;
   historyEnabled: boolean;
@@ -65,6 +66,7 @@ export async function ensureConfig(): Promise<AppConfig> {
   const config = (await fs.readJson(CONFIG_PATH)) as Partial<AppConfig>;
   const normalized: AppConfig = {
     activeProvider: (config.activeProvider ?? DEFAULT_PROVIDER) as ProviderName,
+    activeModels: normalizeActiveModels(config.activeModels),
     defaultApprovalPolicy: (config.defaultApprovalPolicy ?? DEFAULT_APPROVAL_POLICY) as ApprovalPolicy,
     defaultSandboxMode: (config.defaultSandboxMode ?? DEFAULT_SANDBOX_MODE) as SandboxMode,
     historyEnabled: config.historyEnabled ?? true,
@@ -81,6 +83,25 @@ export async function getConfig(): Promise<AppConfig> {
 export async function setActiveProvider(provider: ProviderName): Promise<void> {
   const config = await ensureConfig();
   config.activeProvider = provider;
+  await fs.writeJson(CONFIG_PATH, config, { spaces: 2 });
+}
+
+export async function getActiveModel(provider: ProviderName): Promise<string | undefined> {
+  const config = await ensureConfig();
+  return config.activeModels?.[provider];
+}
+
+export async function setActiveModel(provider: ProviderName, model?: string): Promise<void> {
+  const config = await ensureConfig();
+  const nextModels = { ...(config.activeModels ?? {}) };
+
+  if (model?.trim()) {
+    nextModels[provider] = model.trim();
+  } else {
+    delete nextModels[provider];
+  }
+
+  config.activeModels = normalizeActiveModels(nextModels);
   await fs.writeJson(CONFIG_PATH, config, { spaces: 2 });
 }
 
@@ -141,4 +162,22 @@ export async function writeProjectConfig(dir: string, config: ProjectConfig): Pr
   const target = path.join(path.resolve(dir), PROJECT_CONFIG_NAME);
   await fs.writeJson(target, config, { spaces: 2 });
   return target;
+}
+
+function normalizeActiveModels(input: unknown): Partial<Record<ProviderName, string>> {
+  if (!input || typeof input !== "object") {
+    return {};
+  }
+
+  const models = input as Partial<Record<ProviderName, unknown>>;
+  const normalized: Partial<Record<ProviderName, string>> = {};
+
+  for (const provider of ["claude", "codex", "gemini"] as const) {
+    const value = models[provider];
+    if (typeof value === "string" && value.trim()) {
+      normalized[provider] = value.trim();
+    }
+  }
+
+  return normalized;
 }
